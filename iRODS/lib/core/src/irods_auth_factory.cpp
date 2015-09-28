@@ -5,6 +5,7 @@
 #include "irods_osauth_auth_object.hpp"
 #include "irods_gsi_object.hpp"
 #include "irods_krb_object.hpp"
+#include "irods_gsseap_object.hpp"
 #include <boost/algorithm/string.hpp>
 
 namespace irods {
@@ -33,6 +34,9 @@ namespace irods {
         else if ( AUTH_KRB_SCHEME == scheme ) {
             _ptr.reset( new krb_auth_object( _r_error ) );
         }
+	else if ( AUTH_GSSEAP_SCHEME == scheme ) {
+	    _ptr.reset( new gsseap_auth_object( _r_error ) );
+	}
         else {
             std::string msg( "auth scheme not supported [" );
             msg += scheme + "]";

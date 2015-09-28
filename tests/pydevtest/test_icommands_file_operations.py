@@ -4,6 +4,7 @@ if sys.version_info >= (2, 7):
 else:
     import unittest2 as unittest
 import os
+import tempfile
 import time
 import shutil
 
@@ -102,15 +103,15 @@ class Test_ICommands_File_Operations(resource_suite.ResourceBase, unittest.TestC
         depth = 50
         files_per_level = 5
         file_size = 5
-        
+
         # make local nested dirs
         coll_name = "test_irm_r_nested_coll"
-        local_dir = os.path.join(self.testing_tmp_dir, coll_name)        
+        local_dir = os.path.join(self.testing_tmp_dir, coll_name)
         local_dirs = lib.make_deep_local_tmp_dir(local_dir, depth, files_per_level, file_size)
 
         # iput dir
         self.user0.assert_icommand("iput -r {local_dir}".format(**locals()), "EMPTY")
-        
+
         # force remove collection
         self.user0.assert_icommand("irm -rf {coll_name}".format(**locals()), "EMPTY")
         self.user0.assert_icommand("ils {coll_name}".format(**locals()), 'STDERR_SINGLELINE', "does not exist")
@@ -579,3 +580,9 @@ acPostProcForPut { writeLine("serverLog", "acPostProcForPut called for $objPath"
                 assert number_of_files == lib.count_occurrences_of_string_in_log(
                     'server', 'writeLine: inString = acPostProcForPut called for', start_index=initial_size_of_server_log)
                 shutil.rmtree(dirname)
+
+    def test_large_irods_maximum_size_for_single_buffer_in_megabytes_2880(self):
+        self.admin.environment_file_contents['irods_maximum_size_for_single_buffer_in_megabytes'] = 2000
+        with tempfile.NamedTemporaryFile(prefix='test_large_irods_maximum_size_for_single_buffer_in_megabytes_2880') as f:
+            lib.make_file(f.name, 800*1000*1000, contents='arbitrary')
+            self.admin.assert_icommand(['iput', f.name, '-v'], 'STDOUT_SINGLELINE', '0 thr')
